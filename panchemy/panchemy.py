@@ -3,8 +3,8 @@ from typing import Union
 from pandas import DataFrame
 from sqlalchemy import engine
 
-from model import ModelAPI
-from handler import DBHandler
+from panchemy.model import ModelAPI
+from panchemy.handler import DBHandler
 
 
 
