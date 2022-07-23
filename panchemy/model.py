@@ -4,7 +4,7 @@ from typing import Union
 from pandas import DataFrame
 from sqlalchemy import select
 
-from panchemy.handler import DBHandler
+from .handler import DBHandler
 
 
 class ModelAPI:

@@ -3,8 +3,8 @@ from typing import Union
 from pandas import DataFrame
 from sqlalchemy import engine
 
-from panchemy.model import ModelAPI
-from panchemy.handler import DBHandler
+from .model import ModelAPI
+from .handler import DBHandler
 
 
 
@@ -22,8 +22,8 @@ class PanChemy(object):
                 getattr(c, '__tablename__', None)]
 
     def init(self):
-        for c in self.models:
-            setattr(self, c.__name__, ModelAPI(engine, c))  # type : DataAPI
+        for m in self.models:
+            setattr(self, m.__name__, ModelAPI(engine, m))  # type : DataAPI
 
     def to_df(self, stmt, index: Union[list, str] = None):
         return self._db.stmt_to_df(stmt, index)
