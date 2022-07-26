@@ -1,0 +1,40 @@
+# Compiled source files
+__pycache__/
+*.pyc
+*.pyd
+
+# Egg files
+*.egg-info/
+
+# env files
+.env
+.env.*
+
+# Visual studio
+.vscode/
+
+# sphinx build directory
+docs/_build/
+
+# sphinx rst files
+docs/*.rst
+!index.rst
+
+# node modules
+node_modules/
+
+#.serverless
+.serverless/
+
+# Local test
+test.py
+*.ipynb*
+
+# local environment
+venv/
+.idea
+
+
+
+# snyc file
+.dccache

@@ -1,16 +1,15 @@
 import itertools
-from typing import Union, Iterable
+from typing import Iterable, Union
 
 import pandas as pd
 from pandas import DataFrame
-from sqlalchemy import delete, insert, and_
+from sqlalchemy import and_, delete, insert
 from sqlalchemy.orm import sessionmaker
 
 
 class DBHandler:
     def __init__(self, engine):
-        self._Session = sessionmaker(autocommit=False, autoflush=False,
-                                     bind=engine)
+        self._Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
     def _session(self):
         session = self._Session()
@@ -30,8 +29,9 @@ class DBHandler:
                 return
             yield chunk
 
-    def save_records(self, table, records, rtn_fields: list = None,
-                     chunk_size=10000) -> DataFrame:
+    def save_records(
+        self, table, records, rtn_fields: list = None, chunk_size=10000
+    ) -> DataFrame:
         result_df = []
         session = next(self._session())
         for chunk in self._slice_to_chunk(records, chunk_size):
@@ -43,20 +43,18 @@ class DBHandler:
             result_df.append(df)
 
         df = pd.concat(result_df)
-        print(f'[{table.name}] Inserted {len(df)} rows')
+        print(f"[{table.name}] Inserted {len(df)} rows")
         return df
 
     def _prepare_in_operator(self, pk, df):
         pk_params = []
         for k in pk:
-            # pk_params.update({k : df[[str(k)]]})
-            print(df.get(str(k.name)).values)
-            print(type(df.get(str(k.name)).values))
             pk_params.append(k.in_(df.get(str(k.name)).values.tolist()))
         return and_(*pk_params)
 
-    def delete_records(self, table, pk, df: DataFrame,
-                       rtn_fields: list = None, chunk_size=10000):
+    def delete_records(
+        self, table, pk, df: DataFrame, rtn_fields: list = None, chunk_size=10000
+    ):
         session = next(self._session())
         pk_params = self._prepare_in_operator(pk=pk, df=df)
         stmt = delete(table).where(pk_params).returning(*rtn_fields)
@@ -68,6 +66,7 @@ class DBHandler:
 
     def stmt_to_df(self, stmt, index: Union[list, str] = None) -> DataFrame:
         session = next(self._session())
+
         df = pd.read_sql(stmt, session.bind)
         if index:
             df = df.set_index(index)

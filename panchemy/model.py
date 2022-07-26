@@ -21,7 +21,9 @@ class ModelAPI:
         if isinstance(att, list):
             return set(att)
         if isinstance(att, str):
-            return {att, }
+            return {
+                att,
+            }
         return set()
 
     def _normalize_fields(self, exclude, fields, dropna):
@@ -31,17 +33,21 @@ class ModelAPI:
 
         diff = (dropna - self._columns.keys()) | (fields - self._columns.keys())
         if diff:
-            raise Exception(
-                f"Fields {diff} not existed in table {str(self._table)}")
+            raise Exception(f"Fields {diff} not existed in table {str(self._table)}")
         fields = list(fields - exclude)
 
         return fields, dropna
 
-    def get(self, fields: list = None, index: Union[list, str] = None,
-            exclude: Union[list, str] = None,
-            dropna: Union[list, str] = None) -> DataFrame:
-        fields, dropna = self._normalize_fields(fields=fields, exclude=exclude,
-                                                dropna=dropna)
+    def get(
+        self,
+        fields: list = None,
+        index: Union[list, str] = None,
+        exclude: Union[list, str] = None,
+        dropna: Union[list, str] = None,
+    ) -> DataFrame:
+        fields, dropna = self._normalize_fields(
+            fields=fields, exclude=exclude, dropna=dropna
+        )
 
         stmt = self.base_stmt
 
@@ -64,10 +70,10 @@ class ModelAPI:
         fields = list(self._columns.keys())
         records = (
             df.reset_index()
-                .filter(fields)
-                .astype(object)
-                .where(lambda x: x.notnull(), None)
-                .to_dict(orient='records')
+            .filter(fields)
+            .astype(object)
+            .where(lambda x: x.notnull(), None)
+            .to_dict(orient="records")
         )
         if key_only:
             rtn_fields = self._primary_keys
@@ -83,7 +89,7 @@ class ModelAPI:
 
     def delete(self, df: DataFrame = None):
         df = df.reset_index()
-        df = self._db.delete_records(self._table, df=df,
-                                     pk=self._primary_keys,
-                                     rtn_fields=self._primary_keys)
+        df = self._db.delete_records(
+            self._table, df=df, pk=self._primary_keys, rtn_fields=self._primary_keys
+        )
         return df
