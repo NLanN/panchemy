@@ -6,7 +6,6 @@ from sqlalchemy import select
 
 from .handler import DBHandler
 
-
 class ModelAPI:
     def __init__(self, engine, model):
         self._db: DBHandler = DBHandler(engine)

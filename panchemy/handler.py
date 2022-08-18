@@ -6,6 +6,8 @@ from pandas import DataFrame
 from sqlalchemy import and_, delete, insert
 from sqlalchemy.orm import sessionmaker
 
+from log import logger
+
 
 class DBHandler:
     def __init__(self, engine):
@@ -35,6 +37,7 @@ class DBHandler:
         result_df = []
         session = next(self._session())
         for chunk in self._slice_to_chunk(records, chunk_size):
+            logger.log(f"Started to insert [{table.name}] chunk with {len(chunk)} rows")
             stmt = insert(table, chunk).returning(*rtn_fields)
             record = session.execute(stmt)
             session.commit()
@@ -42,8 +45,9 @@ class DBHandler:
             df = pd.DataFrame.from_records(data, columns=[f.name for f in rtn_fields])
             result_df.append(df)
 
+
         df = pd.concat(result_df)
-        print(f"[{table.name}] Inserted {len(df)} rows")
+        logger.log(f"[{table.name}] Inserted {len(df)} rows")
         return df
 
     def _prepare_in_operator(self, pk, df):
