@@ -7,12 +7,13 @@ from .model import ModelAPI
 
 
 class PanChemy(object):
-    def __init__(self, base_model, engine, dialects="postgresql"):
+    def __init__(self, base_model, engine, chunk_size = 10000, dialects="postgresql"):
         self.dialects = dialects
         self._engine = engine
         self._db: DBHandler = DBHandler(engine)
         self.base = base_model
         self.models = self.__get_registry_models(base_model)
+        self._chunk_size = chunk_size
 
     def __get_registry_models(self, base_model):
         return [
@@ -23,7 +24,7 @@ class PanChemy(object):
 
     def init(self):
         for m in self.models:
-            setattr(self, m.__name__, ModelAPI(self._engine, m))  # type : ModelAPI
+            setattr(self, m.__name__, ModelAPI(self._engine, m, self._chunk_size))  # type : ModelAPI
 
     def to_df(self, stmt, index: Union[list, str] = None):
         return self._db.stmt_to_df(stmt, index)

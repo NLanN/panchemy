@@ -7,13 +7,15 @@ from sqlalchemy import select
 from .handler import DBHandler
 
 class ModelAPI:
-    def __init__(self, engine, model):
+    def __init__(self, engine, model, chunk_size):
         self._db: DBHandler = DBHandler(engine)
         self._model = model
         self._table = model.__table__
         self._columns = {c.name: c for c in model.__table__.columns}
         self._primary_keys = list(model.__table__.primary_key)
+        self._unique_cols = [c for c in model.__table__.columns if c.unique]
         self._foreign_keys = list(model.__table__.foreign_keys)
+        self._chunk_size = chunk_size
         self.base_stmt = select(model)
 
     def __convert_to_set(self, att) -> set:
@@ -79,12 +81,31 @@ class ModelAPI:
         else:
             rtn_fields = list(self._columns.values())
 
-        df = self._db.save_records(self._table, records, rtn_fields)
+        df = self._db.save_records(self._table, records, rtn_fields, self._chunk_size)
         return df
 
-    def upsert(self, df: DataFrame, fields: list = None):
-        # TODO: just for Postgresql
+
+
+    def _mysql_upsert(self):
         ...
+
+
+    def upsert(self, df: DataFrame, fields: list = None, key_only=True):
+        # TODO: just for Postgresql
+        fields = list(self._columns.keys())
+        records = (
+            df.reset_index()
+                .filter(fields)
+                .astype(object)
+                .where(lambda x: x.notnull(), None)
+                .to_dict(orient="records")
+        )
+        if key_only:
+            rtn_fields = self._primary_keys
+        else:
+            rtn_fields = list(self._columns.values())
+        df = self._db.pg_upsert_records(self._table, records, rtn_fields, self._chunk_size)
+        return df
 
     def delete(self, df: DataFrame = None):
         df = df.reset_index()
