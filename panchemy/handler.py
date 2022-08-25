@@ -68,17 +68,15 @@ class DBHandler:
         logger.info(f"Table [{table.name}] inserted with {len(df)} rows")
         return df
 
-    def pg_upsert_records(self, table, records, rtn_fields: list = None,
+    def pg_upsert_records(self, table, records, unique_cols, rtn_fields: list = None,
                           chunk_size=10000) -> DataFrame:
         results = []
         session = next(self._session())
-        index_elements = [c.name for c in table.columns if c.unique]
-        index_elements.extend([k.name for k in table.primary_key])
 
         for chunk in self._slice_to_chunk(records, chunk_size):
             insert_stmt = pg_insert(table, chunk)
             stmt = insert_stmt.on_conflict_do_update(
-                index_elements=index_elements,
+                index_elements=unique_cols,
                 set_={c.name: getattr(insert_stmt.excluded, c.name) for c in
                       table.columns}).returning(*rtn_fields)
 

@@ -7,7 +7,7 @@ from sqlalchemy import select
 from .handler import DBHandler
 
 class ModelAPI:
-    def __init__(self, engine, model, chunk_size):
+    def __init__(self, engine, model, chunk_size, dialect='postgres'):
         self._db: DBHandler = DBHandler(engine)
         self._model = model
         self._table = model.__table__
@@ -91,8 +91,9 @@ class ModelAPI:
 
 
     def upsert(self, df: DataFrame, fields: list = None, key_only=True):
-        # TODO: just for Postgresql
-        fields = list(self._columns.keys())
+        model_fields = set(self._columns.keys())
+        data_cols = set(df.columns.values.tolist())
+        fields = model_fields & data_cols
         records = (
             df.reset_index()
                 .filter(fields)
@@ -104,7 +105,12 @@ class ModelAPI:
             rtn_fields = self._primary_keys
         else:
             rtn_fields = list(self._columns.values())
-        df = self._db.pg_upsert_records(self._table, records, rtn_fields, self._chunk_size)
+
+        unique_cols = [c.name for c in self._table.columns if c.unique]
+        unique_cols.extend([k.name for k in self._table.primary_key])
+        unique_cols = set(unique_cols) & set(records[0].keys())
+
+        df = self._db.pg_upsert_records(self._table, records, unique_cols, rtn_fields, self._chunk_size)
         return df
 
     def delete(self, df: DataFrame = None):

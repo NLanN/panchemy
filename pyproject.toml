@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "panchemy"
-version = "0.0.4"
+version = "0.0.7"
 description = "A library for data handler between SQLAlchemy and pandas"
 authors = ["Alan Nguyen <nnlan.dev.98@gmail.com>"]
 license = "MIT"
