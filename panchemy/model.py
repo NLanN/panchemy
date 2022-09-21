@@ -94,6 +94,8 @@ class ModelAPI:
         model_fields = set(self._columns.keys())
         data_cols = set(df.columns.values.tolist())
         fields = model_fields & data_cols
+
+        df = df.dropna(how='all', axis='rows').dropna(how='all', axis='columns')
         records = (
             df.reset_index()
                 .filter(fields)
@@ -109,6 +111,8 @@ class ModelAPI:
         unique_cols = [c.name for c in self._table.columns if c.unique]
         unique_cols.extend([k.name for k in self._table.primary_key])
         unique_cols = set(unique_cols) & set(records[0].keys())
+        if len(unique_cols) ==0:
+            unique_cols = self._primary_keys
 
         df = self._db.pg_upsert_records(self._table, records, unique_cols, rtn_fields, self._chunk_size)
         return df

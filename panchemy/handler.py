@@ -72,13 +72,13 @@ class DBHandler:
                           chunk_size=10000) -> DataFrame:
         results = []
         session = next(self._session())
-
+        data_cols = [c for c in table.columns if c.name not in table.primary_key]
         for chunk in self._slice_to_chunk(records, chunk_size):
             insert_stmt = pg_insert(table, chunk)
             stmt = insert_stmt.on_conflict_do_update(
                 index_elements=unique_cols,
                 set_={c.name: getattr(insert_stmt.excluded, c.name) for c in
-                      table.columns}).returning(*rtn_fields)
+                      data_cols}).returning(*rtn_fields)
 
             record = session.execute(stmt)
             session.commit()
